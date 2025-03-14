@@ -8,29 +8,21 @@ Future<void> main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   // Get available cameras
   final cameras = await availableCameras();
   final firstCamera = cameras.first;
-  
+
   // Run the app with camera info
   runApp(MyApp(cameras: cameras, initialCamera: firstCamera));
 }
-
 
 class MyApp extends StatelessWidget {
   final List<CameraDescription> cameras;
   final CameraDescription initialCamera;
 
-  const MyApp({
-    Key? key, 
-    required this.cameras, 
-    required this.initialCamera
-  }) : super(key: key);
-
+  const MyApp({super.key, required this.cameras, required this.initialCamera});
 
   @override
   Widget build(BuildContext context) {
@@ -56,8 +48,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: LoginPage(initialCamera: initialCamera, cameras: cameras,)
+      home: LoginPage(initialCamera: initialCamera, cameras: cameras),
     );
   }
 }
-
