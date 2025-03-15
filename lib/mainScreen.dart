@@ -7,6 +7,7 @@ import 'package:camera/camera.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import 'PostStatusPage.dart';
 
 class CameraApp extends StatelessWidget {
   final CameraDescription camera;
@@ -148,11 +149,18 @@ class _CameraHomePageState extends State<CameraHomePage> {
         _capturedImages.add(image);
       });
 
-      ScaffoldMessenger.of(
+      // Navigate to the post status screen with the image path
+      Navigator.push(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Picture saved!')));
+        MaterialPageRoute(
+          builder: (context) => PostStatusScreen(imagePath: image.path),
+        ),
+      );
     } catch (e) {
       print('Error taking picture: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error taking picture: ${e.toString()}')),
+      );
     }
   }
 
