@@ -1,3 +1,4 @@
+import 'package:demo/views/search_friends.dart';
 import 'package:flutter/material.dart';
 import 'package:demo/services/connection_service.dart';
 
@@ -58,6 +59,18 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
                   );
                 },
               ),
+
+      // Floating Action Button to add friends
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => SearchScreen()),
+          );
+        },
+        backgroundColor: Colors.blue,
+        child: Icon(Icons.person_add, color: Colors.white),
+      ),
     );
   }
 }
