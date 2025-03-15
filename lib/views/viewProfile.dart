@@ -3,6 +3,8 @@ import 'package:demo/views/edit_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/src/material/page.dart';
+// Import the new SinglePostViewScreen
+import 'package:demo/views/post_details.dart'; // You'll need to create this file
 
 class ViewProfileScreen extends StatefulWidget {
   const ViewProfileScreen({Key? key}) : super(key: key);
@@ -293,7 +295,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
 
                         const SizedBox(height: 25),
 
-                        // Recent photos grid - to be implemented with Firestore data
+                        // Recent photos grid - Modified to navigate to SinglePostViewScreen
                         FutureBuilder<QuerySnapshot>(
                           future:
                               _firestore
@@ -328,36 +330,56 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                                         doc.data() as Map<String, dynamic>;
                                     final imageUrl =
                                         data['imageUrl'] as String?;
+                                    final String postId = doc.id;
 
-                                    return Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[800],
-                                        borderRadius: BorderRadius.circular(8),
-                                        image:
-                                            imageUrl != null &&
-                                                    imageUrl.isNotEmpty
-                                                ? DecorationImage(
-                                                  image: NetworkImage(imageUrl),
-                                                  fit: BoxFit.cover,
-                                                  onError: (
-                                                    exception,
-                                                    stackTrace,
-                                                  ) {
-                                                    print(
-                                                      'Failed to load image: $imageUrl',
-                                                    );
-                                                  },
+                                    return GestureDetector(
+                                      onTap: () {
+                                        // Navigate to the single post view when tapped
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) =>
+                                                    SinglePostViewScreen(
+                                                      postId: postId,
+                                                    ),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[800],
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          image:
+                                              imageUrl != null &&
+                                                      imageUrl.isNotEmpty
+                                                  ? DecorationImage(
+                                                    image: NetworkImage(
+                                                      imageUrl,
+                                                    ),
+                                                    fit: BoxFit.cover,
+                                                    onError: (
+                                                      exception,
+                                                      stackTrace,
+                                                    ) {
+                                                      print(
+                                                        'Failed to load image: $imageUrl',
+                                                      );
+                                                    },
+                                                  )
+                                                  : null,
+                                        ),
+                                        child:
+                                            imageUrl == null || imageUrl.isEmpty
+                                                ? Icon(
+                                                  Icons.image,
+                                                  color: Colors.grey[400],
+                                                  size: 30,
                                                 )
                                                 : null,
                                       ),
-                                      child:
-                                          imageUrl == null || imageUrl.isEmpty
-                                              ? Icon(
-                                                Icons.image,
-                                                color: Colors.grey[400],
-                                                size: 30,
-                                              )
-                                              : null,
                                     );
                                   }).toList();
                             } else {
