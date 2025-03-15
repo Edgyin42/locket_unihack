@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'mainScreen.dart';
+import 'signUp.dart';
 
 class LoginPage extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -248,7 +249,15 @@ class _LoginPageState extends State<LoginPage> {
                             TextButton(
                               onPressed: () {
                                 // Navigate to Sign Up page
-                                Navigator.pushNamed(context, '/signup');
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SignUpPage(
+                                      initialCamera: widget.initialCamera,  // Changed from 'camera' to 'initialCamera'
+                                      cameras: widget.cameras,
+                                    ),
+                                  ),
+                                );
                               },
                               child: const Text(
                                 'Sign Up',

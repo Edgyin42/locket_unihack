@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'logIn.dart';
 
 class SignUpPage extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -48,7 +49,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
         // If user creation was successful, store additional user info in Firestore
         if (userCredential.user != null) {
-          await _firestore.collection('users').doc(userCredential.user!.uid).set({
+          await _firestore.collection('students').doc(userCredential.user!.uid).set({
             'fullName': _nameController.text.trim(),
             'email': _emailController.text.trim(),
             'createdAt': FieldValue.serverTimestamp(),
@@ -68,7 +69,15 @@ class _SignUpPageState extends State<SignUpPage> {
             );
             
             // Navigate to login or home page
-            Navigator.pop(context);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => LoginPage(
+                  initialCamera: widget.initialCamera,
+                  cameras: widget.cameras,
+                ),
+              ),
+            );
           }
         }
       } on FirebaseAuthException catch (e) {

@@ -1,4 +1,4 @@
-import 'package:demo/views/edit_profile.dart';
+import 'package:demo/views/viewProfile.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'dart:io';
@@ -162,7 +162,7 @@ class _CameraHomePageState extends State<CameraHomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => EditProfileScreen(),
+                          builder: (context) => ViewProfileScreen(),
                         ),
                       );
                     },
