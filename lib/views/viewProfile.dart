@@ -40,6 +40,17 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       final User? currentUser = _auth.currentUser;
       
       if (currentUser != null) {
+
+        final QuerySnapshot postsSnapshot = await _firestore
+          .collection('posts')
+          .where('userId', isEqualTo: currentUser.uid)
+          .get();
+      
+        print('Found ${postsSnapshot.docs.length} posts for user ${currentUser.uid}');
+        
+        if (postsSnapshot.docs.isNotEmpty) {
+          print('Posts exist, but the ordered query requires an index');
+        }
         // Get user document from Firestore
         final DocumentSnapshot userDoc = 
             await _firestore.collection('students').doc(currentUser.uid).get();
@@ -265,7 +276,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                         future: _firestore
                             .collection('posts')
                             .where('userId', isEqualTo: _auth.currentUser?.uid)
-                            .orderBy('createdAt', descending: true)
+                            // .orderBy('createdAt', descending: true)  // Comment this out temporarily
                             .limit(6)
                             .get(),
                         builder: (context, snapshot) {
@@ -289,14 +300,17 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.grey[800],
                                   borderRadius: BorderRadius.circular(8),
-                                  image: imageUrl != null
+                                  image: imageUrl != null && imageUrl.isNotEmpty
                                       ? DecorationImage(
                                           image: NetworkImage(imageUrl),
                                           fit: BoxFit.cover,
+                                          onError: (exception, stackTrace) {
+                                            print('Failed to load image: $imageUrl');
+                                          },
                                         )
                                       : null,
                                 ),
-                                child: imageUrl == null
+                                child: imageUrl == null || imageUrl.isEmpty
                                     ? Icon(
                                         Icons.image,
                                         color: Colors.grey[400],

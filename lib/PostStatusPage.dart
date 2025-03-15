@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloudinary_public/cloudinary_public.dart';
 import 'dart:io';
+import '../models/class_model.dart';
+import '../services/class_service.dart';
+import '../services/student_service.dart';
+import '../services/class_student_service.dart';
 
 class PostStatusScreen extends StatefulWidget {
   final String imagePath;
@@ -20,12 +24,16 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
   bool _isUploading = false;
   final int _maxWords = 100;
   int _currentWordCount = 0;
-  List<Map<String, dynamic>> _availableClasses = [];
+  List<ClassModel> _availableClasses = [];
+  final ClassService _classService = ClassService();
+  final StudentService _studentService = StudentService();
+  final ClassStudentService _classStudentService = ClassStudentService();
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
-    _fetchClasses();
+    _fetchUserClasses();
     _descriptionController.addListener(_countWords);
   }
 
@@ -43,17 +51,31 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
     });
   }
 
-  Future<void> _fetchClasses() async {
+  Future<void> _fetchUserClasses() async {
     try {
-      final QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('classes').get();
-      setState(() {
-        _availableClasses = snapshot.docs
-            .map((doc) => {
-                  'id': doc.id,
-                  'name': (doc.data() as Map<String, dynamic>)['name'] ?? '',
-                })
-            .toList();
-      });
+      // First get current student profile
+      final studentProfile = await _studentService.getStudentProfileByEmail();
+      if (studentProfile != null) {
+        _currentUserId = studentProfile.id;
+        
+        // Fetch all available classes
+        final allClasses = await _classService.getAllClasses();
+        
+        // If student ID exists, fetch enrolled classes
+        if (_currentUserId != null && _currentUserId!.isNotEmpty) {
+          final enrolledClasses = await _classStudentService.getClassesByStudent(_currentUserId!);
+          final enrolledClassIds = enrolledClasses.map((cs) => cs.classId).toList();
+          
+          setState(() {
+            _availableClasses = allClasses;
+          });
+        } else {
+          // If no student ID, just show all classes
+          setState(() {
+            _availableClasses = allClasses;
+          });
+        }
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error fetching classes: $e')),
@@ -103,7 +125,7 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
 
     try {
       // Configure Cloudinary
-      final cloudinary = CloudinaryPublic('your-cloud-name', 'your-upload-preset');
+      final cloudinary = CloudinaryPublic('ddpo3n8j3', 'michaelwave');
       
       // Upload image to Cloudinary
       final response = await cloudinary.uploadFile(
@@ -113,6 +135,10 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
       // Get the secure URL of the uploaded image
       final imageUrl = response.secureUrl;
       
+      // Get current user
+      final studentProfile = await _studentService.getStudentProfileByEmail();
+      final userId = studentProfile?.id ?? 'unknown-user';
+      
       // Save post data to Firebase
       await FirebaseFirestore.instance.collection('posts').add({
         'imageUrl': imageUrl,
@@ -120,7 +146,7 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
         'hashtags': _hashtags,
         'classes': _selectedClasses,
         'createdAt': FieldValue.serverTimestamp(),
-        'userId': 'current-user-id', // Replace with actual user ID from auth
+        'userId': userId,
       });
 
       // Show success message
@@ -200,7 +226,7 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
                     TextField(
                       controller: _descriptionController,
                       maxLines: 3,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.black),
                       decoration: const InputDecoration(
                         hintText: "What's on your mind?",
                         hintStyle: TextStyle(color: Colors.grey),
@@ -238,13 +264,13 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
                       spacing: 8,
                       runSpacing: 8,
                       children: _availableClasses.map((classData) {
-                        final isSelected = _selectedClasses.contains(classData['id']);
+                        final isSelected = _selectedClasses.contains(classData.classId);
                         return GestureDetector(
-                          onTap: () => _toggleClassSelection(classData['id']),
+                          onTap: () => _toggleClassSelection(classData.classId),
                           child: Chip(
                             backgroundColor: isSelected ? Colors.amber : Colors.grey[800],
                             label: Text(
-                              classData['name'],
+                              classData.className,
                               style: TextStyle(
                                 color: isSelected ? Colors.black : Colors.white,
                               ),

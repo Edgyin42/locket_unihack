@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Student {
   final String id;
   final String fullName;
@@ -23,6 +25,38 @@ class Student {
       profilePhoto: data['profilePhoto'] ?? '',
     );
   }
+  factory Student.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>?;
+
+    if (data == null) {
+      throw ArgumentError("Document data cannot be null");
+    }
+
+    return Student(
+      id: doc.id, // ✅ Correctly accessing Firestore document ID
+      fullName: data['fullName'] ?? '',
+      email: data['email'] ?? '',
+      bio: data['bio'] ?? '',
+      profilePhoto: data['profilePhoto'] ?? '',
+    );
+  }
+
+  //   factory Student.fromFirestore(DocumentSnapshot doc) {
+  //   final data = doc.data() as Map<String, dynamic>?; // Ensure proper type casting
+
+  //   if (data == null) {
+  //     throw ArgumentError("Document data cannot be null");
+  //   }
+
+  //   return Student(
+  //     id: doc.id, // Get document ID separately
+  //     fullName: data['fullName'] ?? '',
+  //     email: data['email'] ?? '',
+  //     bio: data['bio'] ?? '',
+  //     profilePhoto: data['profilePhoto'] ?? '',
+
+  //   );
+  // }
 
   // Convert Student object to a map for Firestore
   Map<String, dynamic> toMap() {
