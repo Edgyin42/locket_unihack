@@ -1,4 +1,7 @@
+import 'package:demo/services/connection_service.dart';
+import 'package:demo/views/friends_list.dart';
 import 'package:demo/views/viewProfile.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'dart:io';
@@ -42,12 +45,25 @@ class _CameraHomePageState extends State<CameraHomePage> {
   double _currentZoom = 1.0;
   int _currentCameraIndex = 0;
   List<XFile> _capturedImages = [];
-
+  int numFriends = 0;
+  List<String> _friendIds = [];
+  final ConnectionService _connectionService = ConnectionService();
   @override
   void initState() {
     super.initState();
     // Initialize the camera controller
     _initializeCamera(widget.camera);
+    _loadInformation();
+  }
+
+  void _loadInformation() async {
+    List<String> friends = await _connectionService.getUserFriends(
+      FirebaseAuth.instance.currentUser?.uid ?? "",
+    );
+    setState(() {
+      _friendIds = friends;
+      numFriends = friends.length;
+    });
   }
 
   Future<void> _initializeCamera(CameraDescription camera) async {
@@ -60,7 +76,7 @@ class _CameraHomePageState extends State<CameraHomePage> {
 
       _initializeControllerFuture = _controller.initialize();
       await _initializeControllerFuture; // Wait for initialization to complete
-      
+
       if (mounted) {
         setState(() {});
       }
@@ -69,8 +85,8 @@ class _CameraHomePageState extends State<CameraHomePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to initialize camera: ${e.toString()}')),
       );
+    }
   }
-}
 
   @override
   void dispose() {
@@ -192,16 +208,58 @@ class _CameraHomePageState extends State<CameraHomePage> {
                       borderRadius: BorderRadius.circular(25),
                     ),
                     child: Row(
-                      children: const [
-                        Icon(Icons.people, color: Colors.white, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          '9 Friends',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                      children: [
+                        // Friends count - Make it clickable
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => FriendsListScreen(
+                                      friendIds: _friendIds,
+                                    ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 8.0,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[800],
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.people,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  "$numFriends friends",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
+
+                        // Icon(Icons.people, color: Colors.white, size: 20),
+                        // SizedBox(width: 8),
+                        // Text(
+                        //   "$numFriends friends",
+                        //   style: TextStyle(
+                        //     color: Colors.white,
+                        //     fontWeight: FontWeight.bold,
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),

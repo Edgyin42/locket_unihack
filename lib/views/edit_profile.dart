@@ -1,69 +1,4 @@
 
-// import 'dart:io';
-
-// import 'package:demo/models/class_model.dart';
-// import 'package:demo/services/class_service.dart';
-// import 'package:demo/services/class_student_service.dart';
-// import 'package:flutter/material.dart';
-// import 'package:image_picker/image_picker.dart';
-// import '../services/student_service.dart';
-// import '../models/student_model.dart';
-// import '../models/class_student_model.dart';
-
-// class EditProfileScreen extends StatefulWidget {
-//   const EditProfileScreen({super.key});
-
-//   @override
-//   _EditProfileScreenState createState() => _EditProfileScreenState();
-// }
-
-// class _EditProfileScreenState extends State<EditProfileScreen> {
-//   final StudentService _studentService = StudentService();
-//   final ClassStudentService _classStudentService = ClassStudentService();
-//   final ClassService _classService = ClassService();
-//   final TextEditingController _nameController = TextEditingController();
-//   final TextEditingController _bioController = TextEditingController();
-//   Student? student;
-//   File? _imageFile;
-//   List<ClassStudent>? classStudents = List.empty();
-//   List<ClassModel> allClasses = [];
-//   @override
-//   void initState() {
-//     super.initState();
-//     _loadProfile();
-//   }
-
-//   Future<void> _loadProfile() async {
-//     Student? fetchedStudent = await _studentService.getStudentProfileByEmail();
-//     classStudents = await _classStudentService.getClassesByStudent(
-//       fetchedStudent!.id,
-//     );
-//     allClasses = await _classService.getAllClasses();
-//     setState(() {
-//       student = fetchedStudent;
-//       _nameController.text = student!.fullName;
-//       _bioController.text = student!.bio;
-//     });
-//   }
-
-//   Future<void> _pickImage() async {
-//     final pickedFile = await ImagePicker().pickImage(
-//       source: ImageSource.gallery,
-//     );
-
-//     if (pickedFile != null) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(
-//           content: Text('New profile picture uploaded successfully!'),
-//           backgroundColor: Colors.green,
-//         ),
-//       );
-//       setState(() {
-//         _imageFile = File(pickedFile.path);
-//       });
-//     }
-//   }
-
 //   Future<void> _saveProfile() async {
 //     if (student == null) return;
 
@@ -227,7 +162,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       initialSelectedClassIds,
       selectedClassIds,
     );
-    Navigator.pop(context);
+
+
+    if (mounted) {
+      Navigator.pop(context);
+    }
+
   }
 
   @override

@@ -29,4 +29,4 @@ class ClassModel {
       'description': description,
     };
   }
-}
+
