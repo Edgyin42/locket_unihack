@@ -1,5 +1,6 @@
 import 'package:cloudinary_flutter/cloudinary_context.dart';
 import 'package:cloudinary_url_gen/cloudinary.dart';
+import 'package:demo/helpers/seed_data.dart';
 import 'package:flutter/material.dart';
 import 'logIn.dart';
 import 'package:camera/camera.dart';
@@ -19,6 +20,7 @@ Future<void> main() async {
   CloudinaryContext.cloudinary = Cloudinary.fromCloudName(
     cloudName: 'ddpo3n8j3',
   );
+  // await seedFirestoreClasses();
   // if (Supabase.instance.client.auth.currentUser != null) {
   //   print('hehe ');
   // } else {
