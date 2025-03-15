@@ -2,98 +2,116 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/class_student_model.dart';
 
 class ClassStudentService {
-  final CollectionReference _classStudentCollection = FirebaseFirestore.instance
-      .collection('class_students');
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Add a new class-student entry
-  Future<void> addClassStudent(ClassStudent classStudent) async {
-    await _classStudentCollection
-        .doc(classStudent.id)
-        .set(classStudent.toMap());
-  }
-
-  // Get all class-student relationships
-  Future<List<ClassStudent>> getAllClassStudents() async {
-    final querySnapshot = await _classStudentCollection.get();
-    return querySnapshot.docs
-        .map(
-          (doc) =>
-              ClassStudent.fromMap(doc.data() as Map<String, dynamic>, doc.id),
-        )
-        .toList();
-  }
-
-  // Get students by class_id
-  Future<List<ClassStudent>> getStudentsByClass(String classId) async {
-    final querySnapshot =
-        await _classStudentCollection
-            .where('class_id', isEqualTo: classId)
-            .get();
-    return querySnapshot.docs
-        .map(
-          (doc) =>
-              ClassStudent.fromMap(doc.data() as Map<String, dynamic>, doc.id),
-        )
-        .toList();
-  }
-
-  // Get classes by student_id
+  // Get all class-student associations for a student
   Future<List<ClassStudent>> getClassesByStudent(String studentId) async {
-    final querySnapshot =
-        await _classStudentCollection
-            .where('student_id', isEqualTo: studentId)
-            .get();
-    return querySnapshot.docs
-        .map(
-          (doc) =>
-              ClassStudent.fromMap(doc.data() as Map<String, dynamic>, doc.id),
-        )
-        .toList();
+    try {
+      final snapshot = await _firestore
+          .collection('class_students')
+          .where('studentId', isEqualTo: studentId)
+          .get();
+          
+      return snapshot.docs
+          .map((doc) => ClassStudent(
+                id: doc.id,
+                classId: doc['classId'] ?? '',
+                studentId: doc['studentId'] ?? '',
+              ))
+          .toList();
+    } catch (e) {
+      print('Error getting classes by student: $e');
+      return [];
+    }
   }
 
-  // Delete a class-student entry
-  Future<void> deleteClassStudent(String id) async {
-    await _classStudentCollection.doc(id).delete();
+  // Get just the class IDs for a student
+  Future<List<String>> getStudentClassIds(String studentId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('class_students')
+          .where('studentId', isEqualTo: studentId)
+          .get();
+          
+      return snapshot.docs
+          .map((doc) => doc['classId'] as String)
+          .where((classId) => classId.isNotEmpty)
+          .toList();
+    } catch (e) {
+      print('Error getting student class IDs: $e');
+      return [];
+    }
   }
 
+  // Update a student's class enrollments
   Future<void> updateStudentClasses(
     String studentId,
-    List<String> oldClassIds,
+    List<String> initialClassIds,
     List<String> newClassIds,
   ) async {
     try {
-      // Determine classes to add and remove
-      List<String> classesToAdd =
-          newClassIds.where((id) => !oldClassIds.contains(id)).toList();
-      List<String> classesToRemove =
-          oldClassIds.where((id) => !newClassIds.contains(id)).toList();
+      // Classes to remove (in initial but not in new)
+      final classesToRemove = initialClassIds
+          .where((id) => !newClassIds.contains(id))
+          .toList();
 
-      // Reference to Class_Student collection
+      // Classes to add (in new but not in initial)
+      final classesToAdd = newClassIds
+          .where((id) => !initialClassIds.contains(id))
+          .toList();
 
-      // Delete old classes
+      // Remove classes
       for (String classId in classesToRemove) {
-        QuerySnapshot query =
-            await _classStudentCollection
-                .where('student_id', isEqualTo: studentId)
-                .where('class_id', isEqualTo: classId)
-                .get();
-        for (var doc in query.docs) {
-          await doc.reference.delete();
-        }
+        await _removeStudentFromClass(studentId, classId);
       }
 
-      // Add new classes
+      // Add classes
       for (String classId in classesToAdd) {
-        await _classStudentCollection.add({
-          'student_id': studentId,
-          'class_id': classId,
+        await _addStudentToClass(studentId, classId);
+      }
+    } catch (e) {
+      print('Error updating student classes: $e');
+      throw e;
+    }
+  }
+
+  Future<void> _addStudentToClass(String studentId, String classId) async {
+    try {
+      // Check if association already exists
+      final existingDoc = await _firestore
+          .collection('class_students')
+          .where('studentId', isEqualTo: studentId)
+          .where('classId', isEqualTo: classId)
+          .get();
+
+      if (existingDoc.docs.isEmpty) {
+        // Add new association
+        await _firestore.collection('class_students').add({
+          'studentId': studentId,
+          'classId': classId,
+          'createdAt': FieldValue.serverTimestamp(),
         });
       }
-
-      print("Student classes updated successfully!");
     } catch (e) {
-      print("Error updating student classes: $e");
+      print('Error adding student to class: $e');
+      throw e;
+    }
+  }
+
+  Future<void> _removeStudentFromClass(String studentId, String classId) async {
+    try {
+      final docs = await _firestore
+          .collection('class_students')
+          .where('studentId', isEqualTo: studentId)
+          .where('classId', isEqualTo: classId)
+          .get();
+
+      for (var doc in docs.docs) {
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      print('Error removing student from class: $e');
+      throw e;
     }
   }
 }
-
