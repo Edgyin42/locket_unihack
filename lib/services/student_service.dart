@@ -132,6 +132,50 @@ class StudentService {
     // }
   }
 
+  // Fetch student profile by ID
+  // Future<Student?> getStudentById(String studentId) async {
+  //   try {
+  //     DocumentSnapshot docSnapshot =
+  //         await _firestore.collection('students').doc(studentId).get();
+
+  //     if (docSnapshot.exists) {
+  //       return Student.fromMap(
+  //         docSnapshot.id,
+  //         docSnapshot.data() as Map<String, dynamic>,
+  //       );
+  //     } else {
+  //       print('Student not found');
+  //       return null;
+  //     }
+  //   } catch (e) {
+  //     print('Error fetching student by ID: $e');
+  //     return null;
+  //   }
+  // }
+  Future<Map<String, String>> getNameAndEmailById(String studentId) async {
+    try {
+      DocumentSnapshot docSnapshot =
+          await _firestore.collection('students').doc(studentId).get();
+
+      if (docSnapshot.exists) {
+        Student student = Student.fromMap(
+          docSnapshot.id,
+          docSnapshot.data() as Map<String, dynamic>,
+        );
+        return {
+          'fullName': student.fullName,
+          'email': student.email,
+        }; // Return a Map
+      } else {
+        print('Student not found');
+        return {'fullName': 'Unknown User', 'email': ''};
+      }
+    } catch (e) {
+      print('Error fetching student by ID: $e');
+      return {'fullName': 'Unknown User', 'email': ''};
+    }
+  }
+
   // Create or update student profile
   Future<void> saveStudentProfile(Student student, {File? imageFile}) async {
     try {
