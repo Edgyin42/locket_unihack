@@ -1,4 +1,7 @@
+import 'package:demo/models/request_model.dart';
 import 'package:demo/services/connection_service.dart';
+import 'package:demo/services/request_service.dart'; // Import the FriendRequestService
+import 'package:demo/views/friend_req_list.dart';
 import 'package:demo/views/friends_list.dart';
 import 'package:demo/views/post_history.dart';
 import 'package:demo/views/viewProfile.dart';
@@ -49,12 +52,29 @@ class _CameraHomePageState extends State<CameraHomePage> {
   int numFriends = 0;
   List<String> _friendIds = [];
   final ConnectionService _connectionService = ConnectionService();
+  final FriendRequestService _friendRequestService = FriendRequestService();
+
+  // List to hold the received friend requests
+  List<FriendRequest> _receivedRequests = [];
+
   @override
   void initState() {
     super.initState();
     // Initialize the camera controller
     _initializeCamera(widget.camera);
     _loadInformation();
+    _loadReceivedRequests(); // Load the received friend requests
+  }
+
+  // Load the received friend requests
+  void _loadReceivedRequests() async {
+    List<FriendRequest> receivedRequests = await _friendRequestService
+        .getReceivedFriendRequests(
+          FirebaseAuth.instance.currentUser?.uid ?? "",
+        );
+    setState(() {
+      _receivedRequests = receivedRequests;
+    });
   }
 
   void _loadInformation() async {
@@ -165,7 +185,7 @@ class _CameraHomePageState extends State<CameraHomePage> {
     }
   }
 
-  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // Navigate to post history
   void _navigateToHistory() {
     Navigator.push(
       context,
@@ -218,7 +238,6 @@ class _CameraHomePageState extends State<CameraHomePage> {
                     ),
                     child: Row(
                       children: [
-                        // Friends count - Make it clickable
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -259,27 +278,53 @@ class _CameraHomePageState extends State<CameraHomePage> {
                             ),
                           ),
                         ),
-
-                        // Icon(Icons.people, color: Colors.white, size: 20),
-                        // SizedBox(width: 8),
-                        // Text(
-                        //   "$numFriends friends",
-                        //   style: TextStyle(
-                        //     color: Colors.white,
-                        //     fontWeight: FontWeight.bold,
-                        //   ),
-                        // ),
                       ],
                     ),
                   ),
 
-                  // Chat button
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Colors.grey[800],
-                    child: const Icon(
-                      Icons.chat_bubble_outline,
-                      color: Colors.white,
+                  // Chat button with received requests count
+                  GestureDetector(
+                    onTap: () {
+                      // Navigate to chat or friend requests page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => FriendRequestsPage(
+                                receivedRequests: _receivedRequests,
+                              ),
+                        ),
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.grey[800],
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          const Icon(
+                            Icons.chat_bubble_outline,
+                            color: Colors.white,
+                          ),
+                          if (_receivedRequests.isNotEmpty)
+                            Positioned(
+                              top: -2,
+                              right: -2,
+                              child: CircleAvatar(
+                                radius: 8,
+                                backgroundColor: Colors.red,
+                                child: Text(
+                                  '${_receivedRequests.length}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -390,128 +435,30 @@ class _CameraHomePageState extends State<CameraHomePage> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.amber, width: 4),
+                        boxShadow: [
+                          BoxShadow(
+                            blurRadius: 10,
+                            color: Colors.black.withOpacity(0.5),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.camera,
+                        color: Colors.black,
+                        size: 36,
                       ),
                     ),
                   ),
 
-                  // Flip camera button
+                  // History button
                   GestureDetector(
-                    onTap: _switchCamera,
+                    onTap: _navigateToHistory,
                     child: const Icon(
-                      Icons.flip_camera_ios,
+                      Icons.history,
                       color: Colors.white,
                       size: 28,
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            // History section
-            // Container(
-            //   padding: const EdgeInsets.symmetric(vertical: 12.0),
-            //   child: Column(
-            //     children: [
-            //       Row(
-            //         mainAxisAlignment: MainAxisAlignment.center,
-            //         children: [
-            //           // Thumbnail - show last captured image if available
-            //           Container(
-            //             height: 30,
-            //             width: 30,
-            //             margin: const EdgeInsets.only(right: 10),
-            //             decoration: BoxDecoration(
-            //               color: Colors.grey[700],
-            //               borderRadius: BorderRadius.circular(6),
-            //               image:
-            //                   _capturedImages.isNotEmpty
-            //                       ? DecorationImage(
-            //                         image: FileImage(
-            //                           File(_capturedImages.last.path),
-            //                         ),
-            //                         fit: BoxFit.cover,
-            //                       )
-            //                       : null,
-            //             ),
-            //             child:
-            //                 _capturedImages.isEmpty
-            //                     ? Icon(
-            //                       Icons.image,
-            //                       color: Colors.grey[300],
-            //                       size: 20,
-            //                     )
-            //                     : null,
-            //           ),
-
-            //           // Text
-            //           const Text(
-            //             'History',
-            //             style: TextStyle(
-            //               color: Colors.white,
-            //               fontSize: 16,
-            //               fontWeight: FontWeight.bold,
-            //             ),
-            //           ),
-            //         ],
-            //       ),
-            //       const SizedBox(height: 8),
-            //       const Icon(Icons.keyboard_arrow_down, color: Colors.white),
-            //     ],
-            //   ),
-            // ),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 12.0),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Thumbnail - show last captured image if available
-                      Container(
-                        height: 30,
-                        width: 30,
-                        margin: const EdgeInsets.only(right: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[700],
-                          borderRadius: BorderRadius.circular(6),
-                          image:
-                              _capturedImages.isNotEmpty
-                                  ? DecorationImage(
-                                    image: FileImage(
-                                      File(_capturedImages.last.path),
-                                    ),
-                                    fit: BoxFit.cover,
-                                  )
-                                  : null,
-                        ),
-                        child:
-                            _capturedImages.isEmpty
-                                ? Icon(
-                                  Icons.image,
-                                  color: Colors.grey[300],
-                                  size: 20,
-                                )
-                                : null,
-                      ),
-
-                      // Text
-                      GestureDetector(
-                        onTap:
-                            _navigateToHistory, // Navigate to the posts history
-                        child: const Text(
-                          'History',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Icon(Icons.keyboard_arrow_down, color: Colors.white),
                 ],
               ),
             ),
