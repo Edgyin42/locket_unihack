@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import 'PostStatusPage.dart';
 
 class CameraApp extends StatelessWidget {
   final CameraDescription camera;
@@ -107,37 +108,44 @@ class _CameraHomePageState extends State<CameraHomePage> {
     await _initializeCamera(newCamera);
   }
 
-  Future<void> _takePicture() async {
-    try {
-      // Ensure the camera is initialized
-      await _initializeControllerFuture;
+ Future<void> _takePicture() async {
+  try {
+    // Ensure the camera is initialized
+    await _initializeControllerFuture;
 
-      // Take the picture
-      final XFile image = await _controller.takePicture();
+    // Take the picture
+    final XFile image = await _controller.takePicture();
 
-      // Get the application directory
-      final Directory appDir = await getApplicationDocumentsDirectory();
-      final String dirPath = '${appDir.path}/Pictures';
+    // Get the application directory
+    final Directory appDir = await getApplicationDocumentsDirectory();
+    final String dirPath = '${appDir.path}/Pictures';
 
-      // Create the directory if it doesn't exist
-      await Directory(dirPath).create(recursive: true);
+    // Create the directory if it doesn't exist
+    await Directory(dirPath).create(recursive: true);
 
-      // Copy the image to the app's directory
-      final String fileName = path.basename(image.path);
-      final String localPath = '$dirPath/$fileName';
+    // Copy the image to the app's directory
+    final String fileName = path.basename(image.path);
+    final String localPath = '$dirPath/$fileName';
 
-      File(image.path).copy(localPath);
+    File(image.path).copy(localPath);
 
-      setState(() {
-        _capturedImages.add(image);
-      });
+    setState(() {
+      _capturedImages.add(image);
+    });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Picture saved!')));
-    } catch (e) {
-      print('Error taking picture: $e');
-    }
+    // Navigate to the post status screen with the image path
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PostStatusScreen(imagePath: image.path),
+      ),
+    );
+  } catch (e) {
+    print('Error taking picture: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error taking picture: ${e.toString()}')),
+    );
+  }
   }
 
   @override
