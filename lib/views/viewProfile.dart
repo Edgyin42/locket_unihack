@@ -63,7 +63,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
           setState(() {
             _username = userData['fullName'] ?? "User";
             _bio = userData['bio'] ?? "No bio yet";
-            _profileImageUrl = userData['profileImageUrl'];
+            _profileImageUrl = userData['profilePhoto'];
 
             // Get interests (if stored as an array in Firestore)
             if (userData['interests'] != null) {
