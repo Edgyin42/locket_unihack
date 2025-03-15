@@ -226,7 +226,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       initialSelectedClassIds,
       selectedClassIds,
     );
-    Navigator.pop(context);
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   @override
