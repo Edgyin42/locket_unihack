@@ -24,10 +24,7 @@ class DefaultFirebaseOptions {
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for android - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return android;
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
@@ -52,12 +49,20 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCCcpy1nzKj99ia6y4MVEC-MorxA8WRlRk',
-    appId: '1:751232254393:ios:f5ca73396a732c0466b668',
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyDPJMpEs34GwAWy76mVmuuTfucrymY98PI',
+    appId: '1:751232254393:android:a21d7fa106da881466b668',
     messagingSenderId: '751232254393',
     projectId: 'michaelwave-7d12f',
     storageBucket: 'michaelwave-7d12f.firebasestorage.app',
-    iosBundleId: 'com.google.firebase.presents.demo123',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyCCcpy1nzKj99ia6y4MVEC-MorxA8WRlRk',
+    appId: '1:751232254393:ios:bef20ad12c4b4e1566b668',
+    messagingSenderId: '751232254393',
+    projectId: 'michaelwave-7d12f',
+    storageBucket: 'michaelwave-7d12f.firebasestorage.app',
+    iosBundleId: 'wave.michael.michaelwave',
   );
 }
