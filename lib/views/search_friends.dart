@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:demo/views/viewfriendprofile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:demo/services/connection_service.dart';
@@ -66,6 +67,16 @@ class _SearchScreenState extends State<SearchScreen> {
               itemBuilder: (context, index) {
                 var user = _searchResults[index];
                 return ListTile(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) =>
+                                FriendProfileScreen(email: user["email"]),
+                      ),
+                    );
+                  },
                   leading: CircleAvatar(
                     backgroundImage:
                         user["photoUrl"] != null

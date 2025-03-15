@@ -70,7 +70,7 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
                           MaterialPageRoute(
                             builder:
                                 (context) =>
-                                    FriendProfileScreen(userId: friend["id"]),
+                                    FriendProfileScreen(email: friend["email"]),
                           ),
                         );
                       } else {

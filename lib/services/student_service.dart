@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -23,6 +22,30 @@ class StudentService {
   Future<Student?> getStudentProfileByEmail() async {
     try {
       String? email = getCurrentUserEmail();
+      if (email == null) return null;
+
+      QuerySnapshot querySnapshot =
+          await _firestore
+              .collection('students')
+              .where('email', isEqualTo: email)
+              .limit(1)
+              .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        var doc = querySnapshot.docs.first;
+        return Student.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+      } else {
+        // If student profile not found, return a new empty profile
+        return Student(id: '', fullName: '', email: email);
+      }
+    } catch (e) {
+      print('Error fetching student profile: $e');
+      return null;
+    }
+  }
+
+  Future<Student?> getStudentByEmail(String? email) async {
+    try {
       if (email == null) return null;
 
       QuerySnapshot querySnapshot =
