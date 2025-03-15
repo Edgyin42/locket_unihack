@@ -1,6 +1,9 @@
+import 'package:demo/services/request_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:demo/services/student_service.dart';
+import 'package:demo/services/connection_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FriendProfileScreen extends StatefulWidget {
   final String email;
@@ -13,15 +16,20 @@ class FriendProfileScreen extends StatefulWidget {
 
 class _FriendProfileScreenState extends State<FriendProfileScreen> {
   final StudentService _studentService = StudentService();
+  final ConnectionService _connectionService = ConnectionService();
+  final FriendRequestService _requestService = FriendRequestService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   String _username = "";
   String _bio = "";
   String? _profileImageUrl;
   int _friendsCount = 0;
   int _postsCount = 0;
-  List<String> _interests = [];
   bool _isLoading = true;
+  bool _isFriend = false;
+  bool _hasPendingRequest = false;
+  String? _friendId;
 
   @override
   void initState() {
@@ -41,10 +49,11 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
           _username = student.fullName ?? "User";
           _bio = student.bio ?? "No bio yet";
           _profileImageUrl = student.profilePhoto;
-          _interests = [];
+          _friendId = student.id;
         });
         _loadFriendsCount(student.id);
         _loadPostsCount(student.id);
+        _checkFriendship();
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -79,6 +88,41 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
             .get();
     setState(() {
       _postsCount = posts.docs.length;
+    });
+  }
+
+  Future<void> _checkFriendship() async {
+    String currentUserId = _auth.currentUser?.uid ?? "";
+    if (_friendId == null || currentUserId.isEmpty) return;
+
+    bool areFriends = await _connectionService.areFriends(
+      currentUserId,
+      _friendId!,
+    );
+    bool hasPendingReq = await _requestService.hasPendingFriendRequest(
+      currentUserId,
+      _friendId!,
+    );
+    setState(() {
+      _isFriend = areFriends;
+      _hasPendingRequest = hasPendingReq;
+    });
+  }
+
+  Future<void> _toggleFriendship() async {
+    String currentUserId = _auth.currentUser?.uid ?? "";
+    if (_friendId == null || currentUserId.isEmpty) return;
+
+    if (_isFriend) {
+      // await _connectionService.removeFriend(currentUserId, _friendId!);
+
+      await _connectionService.removeFriend(currentUserId, _friendId!);
+    } else {
+      await _requestService.sendFriendRequest(currentUserId, _friendId!);
+    }
+
+    setState(() {
+      _isFriend = !_isFriend;
     });
   }
 
@@ -157,33 +201,25 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
                         ],
                       ),
                       const SizedBox(height: 25),
-                      if (_interests.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Interests',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children:
-                                    _interests
-                                        .map(
-                                          (interest) =>
-                                              _buildInterestChip(interest),
-                                        )
-                                        .toList(),
-                              ),
-                            ],
+                      if (_friendId != _auth.currentUser?.uid &&
+                          _hasPendingRequest == false)
+                        ElevatedButton(
+                          onPressed: _toggleFriendship,
+                          child: Text(_isFriend ? "Unfriend" : "Add Friend"),
+                        )
+                      else if (_hasPendingRequest)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 20,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            "Request Sent",
+                            style: TextStyle(color: Colors.white),
                           ),
                         ),
                     ],
@@ -207,20 +243,6 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
         const SizedBox(height: 5),
         Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 16)),
       ],
-    );
-  }
-
-  Widget _buildInterestChip(String interest) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey[800],
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        interest,
-        style: const TextStyle(color: Colors.white, fontSize: 14),
-      ),
     );
   }
 }

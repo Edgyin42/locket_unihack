@@ -1,5 +1,6 @@
 import 'package:demo/services/connection_service.dart';
 import 'package:demo/views/friends_list.dart';
+import 'package:demo/views/post_history.dart';
 import 'package:demo/views/viewProfile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -162,6 +163,14 @@ class _CameraHomePageState extends State<CameraHomePage> {
         SnackBar(content: Text('Error taking picture: ${e.toString()}')),
       );
     }
+  }
+
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  void _navigateToHistory() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => PostsHistoryScreen()),
+    );
   }
 
   @override
@@ -400,6 +409,57 @@ class _CameraHomePageState extends State<CameraHomePage> {
             ),
 
             // History section
+            // Container(
+            //   padding: const EdgeInsets.symmetric(vertical: 12.0),
+            //   child: Column(
+            //     children: [
+            //       Row(
+            //         mainAxisAlignment: MainAxisAlignment.center,
+            //         children: [
+            //           // Thumbnail - show last captured image if available
+            //           Container(
+            //             height: 30,
+            //             width: 30,
+            //             margin: const EdgeInsets.only(right: 10),
+            //             decoration: BoxDecoration(
+            //               color: Colors.grey[700],
+            //               borderRadius: BorderRadius.circular(6),
+            //               image:
+            //                   _capturedImages.isNotEmpty
+            //                       ? DecorationImage(
+            //                         image: FileImage(
+            //                           File(_capturedImages.last.path),
+            //                         ),
+            //                         fit: BoxFit.cover,
+            //                       )
+            //                       : null,
+            //             ),
+            //             child:
+            //                 _capturedImages.isEmpty
+            //                     ? Icon(
+            //                       Icons.image,
+            //                       color: Colors.grey[300],
+            //                       size: 20,
+            //                     )
+            //                     : null,
+            //           ),
+
+            //           // Text
+            //           const Text(
+            //             'History',
+            //             style: TextStyle(
+            //               color: Colors.white,
+            //               fontSize: 16,
+            //               fontWeight: FontWeight.bold,
+            //             ),
+            //           ),
+            //         ],
+            //       ),
+            //       const SizedBox(height: 8),
+            //       const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+            //     ],
+            //   ),
+            // ),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12.0),
               child: Column(
@@ -436,12 +496,16 @@ class _CameraHomePageState extends State<CameraHomePage> {
                       ),
 
                       // Text
-                      const Text(
-                        'History',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                      GestureDetector(
+                        onTap:
+                            _navigateToHistory, // Navigate to the posts history
+                        child: const Text(
+                          'History',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
