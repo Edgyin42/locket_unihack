@@ -1,4 +1,3 @@
-
 //   Future<void> _saveProfile() async {
 //     if (student == null) return;
 
@@ -163,19 +162,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       selectedClassIds,
     );
 
-
     if (mounted) {
       Navigator.pop(context);
     }
-
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Edit Profile')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: Center(
+        // padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             GestureDetector(

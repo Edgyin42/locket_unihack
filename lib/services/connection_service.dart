@@ -38,4 +38,11 @@ class ConnectionService {
 
     return snapshot.docs.map((doc) => doc.data()).toList();
   }
+
+  Future<void> addFriend(String userId, String friendId) async {
+    await _firestore.collection("connections").add({
+      "student1_id": userId,
+      "student2_id": friendId,
+    });
+  }
 }
