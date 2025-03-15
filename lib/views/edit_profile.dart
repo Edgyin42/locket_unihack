@@ -1,82 +1,10 @@
-//   Future<void> _saveProfile() async {
-//     if (student == null) return;
-
-//     String profilePhotoUrl = student!.profilePhoto;
-
-//     if (_imageFile != null) {
-//       try {
-//         profilePhotoUrl = await _studentService.uploadProfilePicture(
-//           _imageFile!,
-//         );
-//       } catch (e) {
-//         print(e);
-//       }
-//     }
-//     print('nhinhinhi $profilePhotoUrl');
-
-//     Student updatedStudent = Student(
-//       id: student!.id,
-//       fullName: _nameController.text.trim(),
-//       email: student!.email,
-//       bio: _bioController.text.trim(),
-//       profilePhoto: profilePhotoUrl,
-//     );
-
-//     await _studentService.saveStudentProfile(updatedStudent);
-//     Navigator.pop(context);
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text('Edit Profile')),
-//       body: Padding(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Column(
-//           children: [
-//             GestureDetector(
-//               onTap: _pickImage,
-//               child: CircleAvatar(
-//                 radius: 50,
-//                 backgroundColor: Colors.grey[300],
-//                 backgroundImage:
-//                     _imageFile != null
-//                         ? FileImage(_imageFile!)
-//                         : (student?.profilePhoto.isNotEmpty ?? false)
-//                         ? NetworkImage(student!.profilePhoto) as ImageProvider
-//                         : const AssetImage('assets/default_profile.png'),
-//                 child:
-//                     _imageFile == null &&
-//                             (student?.profilePhoto.isEmpty ?? true)
-//                         ? const Icon(
-//                           Icons.camera_alt,
-//                           size: 40,
-//                           color: Colors.grey,
-//                         )
-//                         : null,
-//               ),
-//             ),
-//             const SizedBox(height: 20),
-//             TextField(
-//               controller: _nameController,
-//               decoration: const InputDecoration(labelText: 'Full Name'),
-//             ),
-//             TextField(
-//               controller: _bioController,
-//               decoration: const InputDecoration(labelText: 'Bio'),
-//             ),
-//             const SizedBox(height: 20),
-//             ElevatedButton(onPressed: _saveProfile, child: const Text('Save')),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
 import 'dart:io';
+import 'package:camera/camera.dart';
+import 'package:demo/logIn.dart';
 import 'package:demo/models/class_model.dart';
 import 'package:demo/services/class_service.dart';
 import 'package:demo/services/class_student_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/student_service.dart';
@@ -108,6 +36,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     _loadProfile();
+  }
+
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+    final cameras_ = await availableCameras();
+    final firstCamera = cameras_.first;
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) =>
+                  LoginPage(initialCamera: firstCamera, cameras: cameras_),
+        ),
+      );
+      // Redirect to login screen
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -259,6 +204,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(onPressed: _saveProfile, child: const Text('Save')),
+            const SizedBox(height: 20),
+            ElevatedButton(onPressed: _signOut, child: const Text('Sign Out')),
           ],
         ),
       ),

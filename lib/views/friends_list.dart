@@ -59,8 +59,8 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
                               ? Icon(Icons.person)
                               : null,
                     ),
-                    title: Text(friend["name"] ?? "No Name"),
-                    subtitle: Text(friend["email"] ?? "No Email"),
+                    title: Text(friend["name"] ?? ""),
+                    subtitle: Text(friend["email"] ?? ""),
                     onTap: () {
                       print('Tapped on: ${friend["id"]}'); // Debugging print
 
