@@ -1,3 +1,4 @@
+import 'package:demo/views/edit_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'dart:io';
@@ -7,12 +8,9 @@ import 'package:path/path.dart' as path;
 class CameraApp extends StatelessWidget {
   final CameraDescription camera;
   final List<CameraDescription> cameras;
-  
-  const CameraApp({
-    Key? key, 
-    required this.camera,
-    required this.cameras,
-  }) : super(key: key);
+
+  const CameraApp({Key? key, required this.camera, required this.cameras})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -28,12 +26,9 @@ class CameraApp extends StatelessWidget {
 class CameraHomePage extends StatefulWidget {
   final CameraDescription camera;
   final List<CameraDescription> cameras;
-  
-  const CameraHomePage({
-    Key? key, 
-    required this.camera,
-    required this.cameras,
-  }) : super(key: key);
+
+  const CameraHomePage({Key? key, required this.camera, required this.cameras})
+    : super(key: key);
 
   @override
   State<CameraHomePage> createState() => _CameraHomePageState();
@@ -62,7 +57,7 @@ class _CameraHomePageState extends State<CameraHomePage> {
     );
 
     _initializeControllerFuture = _controller.initialize();
-    
+
     if (mounted) {
       setState(() {});
     }
@@ -80,7 +75,7 @@ class _CameraHomePageState extends State<CameraHomePage> {
       setState(() {
         _isFlashOn = !_isFlashOn;
       });
-      
+
       await _controller.setFlashMode(
         _isFlashOn ? FlashMode.torch : FlashMode.off,
       );
@@ -99,7 +94,7 @@ class _CameraHomePageState extends State<CameraHomePage> {
   void _switchCamera() async {
     _currentCameraIndex = (_currentCameraIndex + 1) % widget.cameras.length;
     final newCamera = widget.cameras[_currentCameraIndex];
-    
+
     await _controller.dispose();
     await _initializeCamera(newCamera);
   }
@@ -122,16 +117,16 @@ class _CameraHomePageState extends State<CameraHomePage> {
       // Copy the image to the app's directory
       final String fileName = path.basename(image.path);
       final String localPath = '$dirPath/$fileName';
-      
+
       File(image.path).copy(localPath);
 
       setState(() {
         _capturedImages.add(image);
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Picture saved!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Picture saved!')));
     } catch (e) {
       print('Error taking picture: $e');
     }
@@ -146,34 +141,43 @@ class _CameraHomePageState extends State<CameraHomePage> {
           children: [
             // Top bar with profile, friends count, and chat
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Profile picture
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Colors.grey[800],
-                    child: const Icon(
-                      Icons.person,
-                      color: Colors.white,
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditProfileScreen(),
+                        ),
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.grey[800],
+                      child: const Icon(Icons.person, color: Colors.white),
                     ),
                   ),
-                  
+
                   // Friends count
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.grey[800],
                       borderRadius: BorderRadius.circular(25),
                     ),
                     child: Row(
                       children: const [
-                        Icon(
-                          Icons.people,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+                        Icon(Icons.people, color: Colors.white, size: 20),
                         SizedBox(width: 8),
                         Text(
                           '9 Friends',
@@ -185,7 +189,7 @@ class _CameraHomePageState extends State<CameraHomePage> {
                       ],
                     ),
                   ),
-                  
+
                   // Chat button
                   CircleAvatar(
                     radius: 20,
@@ -198,7 +202,7 @@ class _CameraHomePageState extends State<CameraHomePage> {
                 ],
               ),
             ),
-            
+
             // Camera preview area
             Expanded(
               child: FutureBuilder<void>(
@@ -216,7 +220,7 @@ class _CameraHomePageState extends State<CameraHomePage> {
                             child: CameraPreview(_controller),
                           ),
                         ),
-                        
+
                         // Flash button
                         Positioned(
                           left: 32,
@@ -225,7 +229,9 @@ class _CameraHomePageState extends State<CameraHomePage> {
                             onTap: _toggleFlash,
                             child: CircleAvatar(
                               radius: 18,
-                              backgroundColor: Colors.grey[700]?.withOpacity(0.7),
+                              backgroundColor: Colors.grey[700]?.withOpacity(
+                                0.7,
+                              ),
                               child: Icon(
                                 _isFlashOn ? Icons.flash_on : Icons.flash_off,
                                 color: Colors.white,
@@ -234,7 +240,7 @@ class _CameraHomePageState extends State<CameraHomePage> {
                             ),
                           ),
                         ),
-                        
+
                         // Zoom button
                         Positioned(
                           right: 32,
@@ -242,12 +248,15 @@ class _CameraHomePageState extends State<CameraHomePage> {
                           child: GestureDetector(
                             onTap: () {
                               // Cycle through zoom levels: 1x, 2x, 3x
-                              double nextZoom = _currentZoom >= 3 ? 1.0 : _currentZoom + 1.0;
+                              double nextZoom =
+                                  _currentZoom >= 3 ? 1.0 : _currentZoom + 1.0;
                               _setZoom(nextZoom);
                             },
                             child: CircleAvatar(
                               radius: 18,
-                              backgroundColor: Colors.grey[700]?.withOpacity(0.7),
+                              backgroundColor: Colors.grey[700]?.withOpacity(
+                                0.7,
+                              ),
                               child: Text(
                                 "${_currentZoom.toStringAsFixed(0)}×",
                                 style: const TextStyle(
@@ -267,7 +276,7 @@ class _CameraHomePageState extends State<CameraHomePage> {
                 },
               ),
             ),
-            
+
             // Bottom camera controls
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20.0),
@@ -288,7 +297,7 @@ class _CameraHomePageState extends State<CameraHomePage> {
                       size: 28,
                     ),
                   ),
-                  
+
                   // Capture button
                   GestureDetector(
                     onTap: _takePicture,
@@ -298,14 +307,11 @@ class _CameraHomePageState extends State<CameraHomePage> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.amber,
-                          width: 4,
-                        ),
+                        border: Border.all(color: Colors.amber, width: 4),
                       ),
                     ),
                   ),
-                  
+
                   // Flip camera button
                   GestureDetector(
                     onTap: _switchCamera,
@@ -318,7 +324,7 @@ class _CameraHomePageState extends State<CameraHomePage> {
                 ],
               ),
             ),
-            
+
             // History section
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -335,18 +341,26 @@ class _CameraHomePageState extends State<CameraHomePage> {
                         decoration: BoxDecoration(
                           color: Colors.grey[700],
                           borderRadius: BorderRadius.circular(6),
-                          image: _capturedImages.isNotEmpty
-                              ? DecorationImage(
-                                  image: FileImage(File(_capturedImages.last.path)),
-                                  fit: BoxFit.cover,
-                                )
-                              : null,
+                          image:
+                              _capturedImages.isNotEmpty
+                                  ? DecorationImage(
+                                    image: FileImage(
+                                      File(_capturedImages.last.path),
+                                    ),
+                                    fit: BoxFit.cover,
+                                  )
+                                  : null,
                         ),
-                        child: _capturedImages.isEmpty
-                            ? Icon(Icons.image, color: Colors.grey[300], size: 20)
-                            : null,
+                        child:
+                            _capturedImages.isEmpty
+                                ? Icon(
+                                  Icons.image,
+                                  color: Colors.grey[300],
+                                  size: 20,
+                                )
+                                : null,
                       ),
-                      
+
                       // Text
                       const Text(
                         'History',
@@ -359,10 +373,7 @@ class _CameraHomePageState extends State<CameraHomePage> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: Colors.white,
-                  ),
+                  const Icon(Icons.keyboard_arrow_down, color: Colors.white),
                 ],
               ),
             ),
