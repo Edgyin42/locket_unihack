@@ -253,7 +253,7 @@ class _LoginPageState extends State<LoginPage> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => SignUpPage(
-                                      initialCamera: widget.initialCamera,  // Changed from 'camera' to 'initialCamera'
+                                      initialCamera: widget.initialCamera,  
                                       cameras: widget.cameras,
                                     ),
                                   ),
