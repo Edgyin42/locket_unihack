@@ -40,15 +40,13 @@ dependencies:
   firebase_storage: ^11.3.1
   shared_preferences: ^2.2.2
   image_picker: ^1.1.2
-
-  cloudinary_public: ^0.13.0
-
-
-  supabase_flutter: ^2.0.0
   uuid: ^4.5.1
   cloudinary_flutter: ^1.0.0
   cloudinary_url_gen: ^1.0.0
+  supabase_flutter: ^2.0.0
   http: ^0.13.6
+  cloudinary_public: ^0.13.0
+
 
 
 dev_dependencies:

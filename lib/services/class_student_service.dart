@@ -95,4 +95,5 @@ class ClassStudentService {
       print("Error updating student classes: $e");
     }
   }
+}
 

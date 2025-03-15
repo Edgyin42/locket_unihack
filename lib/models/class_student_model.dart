@@ -22,3 +22,4 @@ class ClassStudent {
   Map<String, dynamic> toMap() {
     return {'class_id': classId, 'student_id': studentId};
   }
+}
