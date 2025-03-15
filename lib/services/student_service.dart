@@ -1,13 +1,17 @@
+import 'dart:convert';
 import 'dart:io';
-
+import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+// import 'package:firebase_storage/firebase_storage.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import '../models/student_model.dart';
 
 class StudentService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final _uuid = Uuid();
+
   // Get current user's email
   String? getCurrentUserEmail() {
     User? user = FirebaseAuth.instance.currentUser;
@@ -40,25 +44,68 @@ class StudentService {
     }
   }
 
+  String generateImageName() {
+    return '${_uuid.v4()}.jpg'; // Generates a unique image name
+  }
+
   Future<String> uploadProfilePicture(File imageFile) async {
+    // try {
+    //   if (_supabase.auth.currentUser == null) {
+    //     print("User is not authenticated");
+    //   }
+    //   String imageName = generateImageName();
+    //   final response = await _supabase.storage
+    //       .from(_bucketName)
+    //       .upload(imageName, imageFile);
+    //   print(response);
+    //   final String imageUrl = _supabase.storage
+    //       .from(_bucketName)
+    //       .getPublicUrl(imageName);
+    //   return imageUrl;
+    // } catch (e) {
+    //   print('Error uploading profile picture: $e');
+    //   return ''; // Return empty string on failure
+    // }
     try {
-      String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
-      // Create a reference to the storage location
-      Reference storageRef = _storage.ref().child(
-        'profile_pictures/$userId.jpg',
+      final url = Uri.parse(
+        "https://api.cloudinary.com/v1_1/ddpo3n8j3/image/upload",
       );
 
-      // Upload the file
-      UploadTask uploadTask = storageRef.putFile(imageFile);
-      TaskSnapshot snapshot = await uploadTask;
+      var request = http.MultipartRequest('POST', url);
+      request.fields['upload_preset'] = 'michaelwave'; // Your preset name
+      request.files.add(
+        await http.MultipartFile.fromPath('file', imageFile.path),
+      );
 
-      // Get the download URL
-      String downloadUrl = await snapshot.ref.getDownloadURL();
-      return downloadUrl;
+      var response = await request.send();
+      var responseData = await response.stream.bytesToString();
+      var jsonData = json.decode(responseData);
+      print(jsonData);
+      return jsonData['secure_url'];
     } catch (e) {
-      print('Error uploading profile picture: $e');
-      return ''; // Return empty string on failure
+      print("error dang anh dcm $e");
+      return ''; // Returns image URL
     }
+    // Future<String> uploadProfilePicture(File imageFile) async {
+    //   try {
+    //     String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    //     // Create a reference to the storage location
+    //     Reference storageRef = _storage.ref().child(
+    //       'profile_pictures/$userId.jpg',
+    //     );
+
+    //     // Upload the file
+    //     UploadTask uploadTask = storageRef.putFile(imageFile);
+    //     TaskSnapshot snapshot = await uploadTask;
+
+    //     // Get the download URL
+    //     String downloadUrl = await snapshot.ref.getDownloadURL();
+    //     return downloadUrl;
+    //   } catch (e) {
+    //     print('Error uploading profile picture: $e');
+    //     return ''; // Return empty string on failure
+    //   }
+    // }
   }
 
   // Create or update student profile
