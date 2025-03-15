@@ -152,7 +152,7 @@ class StudentService {
   //     return null;
   //   }
   // }
-  Future<Map<String, String>> getNameAndEmailById(String studentId) async {
+  Future<Map<String, String>> getInfoPosterById(String studentId) async {
     try {
       DocumentSnapshot docSnapshot =
           await _firestore.collection('students').doc(studentId).get();
@@ -165,6 +165,7 @@ class StudentService {
         return {
           'fullName': student.fullName,
           'email': student.email,
+          'profilePhoto': student.profilePhoto,
         }; // Return a Map
       } else {
         print('Student not found');

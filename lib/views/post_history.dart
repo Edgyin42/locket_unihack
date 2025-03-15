@@ -13,15 +13,13 @@ class PostsHistoryScreen extends StatefulWidget {
 }
 
 class _PostsHistoryScreenState extends State<PostsHistoryScreen> {
-  late Future<List<Post>> _postsFuture; // Future to load posts
-  final StudentService _studentService =
-      StudentService(); // Instance of StudentService
+  late Future<List<Post>> _postsFuture;
+  final StudentService _studentService = StudentService();
 
   @override
   void initState() {
     super.initState();
-    _postsFuture =
-        PostService().getRelevantPosts(); // Fetch posts for the current user
+    _postsFuture = PostService().getRelevantPosts();
   }
 
   String _formatDate(Timestamp timestamp) {
@@ -32,45 +30,75 @@ class _PostsHistoryScreenState extends State<PostsHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black, // Black background
       appBar: AppBar(
-        title: const Text('History'),
+        title: const Text(
+          'History',
+          style: TextStyle(color: Colors.white), // White text
+        ),
         backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: FutureBuilder<List<Post>>(
         future: _postsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.pinkAccent),
+            );
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(
+              child: Text(
+                'Error: ${snapshot.error}',
+                style: const TextStyle(color: Colors.white),
+              ),
+            );
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No posts available.'));
+            return const Center(
+              child: Text(
+                'No posts available.',
+                style: TextStyle(color: Colors.white),
+              ),
+            );
           }
 
-          // Display posts in a scrollable PageView
           return PageView.builder(
             itemCount: snapshot.data!.length,
             itemBuilder: (context, index) {
               final post = snapshot.data![index];
 
               return FutureBuilder<Map<String, String>>(
-                future: _studentService.getNameAndEmailById(post.userId),
+                future: _studentService.getInfoPosterById(
+                  post.userId,
+                ), // Fetch profile photo too
                 builder: (context, userSnapshot) {
                   if (userSnapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.pinkAccent,
+                      ),
+                    );
                   }
 
                   if (userSnapshot.hasError) {
-                    return Center(child: Text('Error fetching user details.'));
+                    return Center(
+                      child: Text(
+                        'Error fetching user details.',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
                   }
 
                   String fullName =
                       userSnapshot.data?['fullName'] ?? "Unknown User";
                   String email = userSnapshot.data?['email'] ?? "";
+                  String profilePhoto =
+                      userSnapshot.data?['profilePhoto'] ??
+                      ""; // Profile photo URL
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(
@@ -80,54 +108,88 @@ class _PostsHistoryScreenState extends State<PostsHistoryScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // User's full name and creation date
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) =>
-                                        FriendProfileScreen(email: email),
+                        // User Profile Row (Profile Picture + Name)
+                        Row(
+                          children: [
+                            // Profile Picture
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) =>
+                                            FriendProfileScreen(email: email),
+                                  ),
+                                );
+                              },
+                              child: CircleAvatar(
+                                radius: 20,
+                                backgroundImage:
+                                    profilePhoto.isNotEmpty
+                                        ? NetworkImage(profilePhoto)
+                                        : const AssetImage(
+                                              'assets/default_profile.png',
+                                            )
+                                            as ImageProvider,
+                                backgroundColor: Colors.grey[800],
                               ),
-                            );
-                          },
-                          child: Text(
-                            fullName,
-                            style: const TextStyle(
-                              color: Colors.black, // Set text color to black
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
                             ),
-                          ),
+                            const SizedBox(
+                              width: 10,
+                            ), // Space between image and text
+                            // User Name
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) =>
+                                            FriendProfileScreen(email: email),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                fullName,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Text(
                           _formatDate(post.createdAt),
                           style: const TextStyle(
-                            color: Colors.black87, // Set text color to black
+                            color: Colors.white70,
                             fontSize: 14,
                           ),
                         ),
                         const SizedBox(height: 12),
 
-                        // Post image
+                        // Post Image - Modified to be square
                         ClipRRect(
                           borderRadius: BorderRadius.circular(16),
-                          child: Image.network(
-                            post.imageUrl,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: 250, // Adjust the height of the image
+                          child: AspectRatio(
+                            aspectRatio: 1.0, // Force 1:1 aspect ratio (square)
+                            child: Image.network(
+                              post.imageUrl,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),
 
-                        // Post description
+                        // Post Description
                         Text(
                           post.description,
                           style: const TextStyle(
-                            color: Colors.black, // Set text color to black
+                            color: Colors.white,
                             fontSize: 16,
                           ),
                         ),
@@ -141,9 +203,9 @@ class _PostsHistoryScreenState extends State<PostsHistoryScreen> {
                                 return Chip(
                                   label: Text(
                                     "#$hashtag",
-                                    style: const TextStyle(color: Colors.black),
+                                    style: const TextStyle(color: Colors.white),
                                   ),
-                                  backgroundColor: Colors.blueAccent,
+                                  backgroundColor: Colors.pinkAccent,
                                 );
                               }).toList(),
                         ),
