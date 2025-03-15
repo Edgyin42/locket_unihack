@@ -1,3 +1,5 @@
+import 'package:cloudinary_flutter/cloudinary_context.dart';
+import 'package:cloudinary_url_gen/cloudinary.dart';
 import 'package:flutter/material.dart';
 import 'logIn.dart';
 import 'package:camera/camera.dart';
@@ -9,7 +11,19 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
+  // await Supabase.initialize(
+  //   url: 'https://cscyoladyqgzqebnoaqy.supabase.co',
+  //   anonKey:
+  //       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzY3lvbGFkeXFnenFlYm5vYXF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIwMTM2NjAsImV4cCI6MjA1NzU4OTY2MH0.HYl9Yep6nlPlXJn6j-0lC26P71cigcLmFVug3LXrtx4',
+  // );
+  CloudinaryContext.cloudinary = Cloudinary.fromCloudName(
+    cloudName: 'ddpo3n8j3',
+  );
+  // if (Supabase.instance.client.auth.currentUser != null) {
+  //   print('hehe ');
+  // } else {
+  //   print('null roiiii');
+  // }
   // Get available cameras
   final cameras = await availableCameras();
   final firstCamera = cameras.first;

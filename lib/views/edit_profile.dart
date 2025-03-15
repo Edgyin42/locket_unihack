@@ -42,6 +42,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
 
     if (pickedFile != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('New profile picture uploaded successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
       setState(() {
         _imageFile = File(pickedFile.path);
       });
@@ -54,8 +60,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     String profilePhotoUrl = student!.profilePhoto;
 
     if (_imageFile != null) {
-      profilePhotoUrl = await _studentService.uploadProfilePicture(_imageFile!);
+      try {
+        profilePhotoUrl = await _studentService.uploadProfilePicture(
+          _imageFile!,
+        );
+      } catch (e) {
+        print(e);
+      }
     }
+    print('nhinhinhi $profilePhotoUrl');
 
     Student updatedStudent = Student(
       id: student!.id,
