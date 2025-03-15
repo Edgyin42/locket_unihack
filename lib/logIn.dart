@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'signUp.dart';
-import 'mainScreen.dart';
 import 'package:camera/camera.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'mainScreen.dart';
 
 class LoginPage extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -28,151 +25,60 @@ class _LoginPageState extends State<LoginPage> {
   bool _rememberMe = false;
   bool _isLoading = false;
 
-  // Firebase instances
+  // Firebase Auth instance
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  @override
-  void initState() {
-    super.initState();
-    _checkIfUserRemembered();
-  }
-
-  // Check if user credentials are saved
-  Future<void> _checkIfUserRemembered() async {
-    final prefs = await SharedPreferences.getInstance();
-    final bool rememberMe = prefs.getBool('rememberMe') ?? false;
-    
-    if (rememberMe) {
-      final String? email = prefs.getString('email');
-      final String? password = prefs.getString('password');
-      
-      if (email != null && password != null) {
-        setState(() {
-          _emailController.text = email;
-          _passwordController.text = password;
-          _rememberMe = true;
-        });
-      }
-    }
-  }
-
-  // Save user credentials if remember me is checked
-  Future<void> _saveUserCredentials() async {
-    if (_rememberMe) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('rememberMe', true);
-      await prefs.setString('email', _emailController.text.trim());
-      await prefs.setString('password', _passwordController.text);
-    } else {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('rememberMe', false);
-      await prefs.remove('email');
-      await prefs.remove('password');
-    }
-  }
-
-  // Update user last login time in Firestore
-  Future<void> _updateUserLastLogin(String userId) async {
-    try {
-      await _firestore.collection('users').doc(userId).update({
-        'lastLogin': FieldValue.serverTimestamp(),
-        'lastLoginDevice': _getDeviceInfo(),
-      });
-    } catch (e) {
-      // Silently handle error - non-critical operation
-      debugPrint('Error updating last login: $e');
-    }
-  }
-
-  // Get basic device info
-  String _getDeviceInfo() {
-    return '${Theme.of(context).platform.toString()} device';
-  }
-
-  // Handle successful login
-  Future<void> _handleSuccessfulLogin(User user) async {
-    // Update last login time
-    await _updateUserLastLogin(user.uid);
-    
-    // Save user information to local storage for quick access
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('userId', user.uid);
-    await prefs.setString('userEmail', user.email ?? '');
-    
-    // Get user display name from Firestore
-    try {
-      final userDoc = await _firestore.collection('users').doc(user.uid).get();
-      if (userDoc.exists) {
-        final userData = userDoc.data();
-        if (userData != null && userData.containsKey('fullName')) {
-          final fullName = userData['fullName'] as String;
-          await prefs.setString('userName', fullName);
-          
-          // Show personalized welcome message
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Welcome back, $fullName!'),
-                backgroundColor: Colors.green,
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('Error retrieving user data: $e');
-    }
-    
-    // Navigate to main screen
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CameraHomePage(
-            camera: widget.initialCamera,
-            cameras: widget.cameras,
-          ),
-        ),
-      );
-    }
-  }
-
-  // Handle login with Firebase
-  Future<void> _login() async {
+  // Method to handle sign in
+  Future<void> _signIn() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
       try {
-        // Sign in with email and password
+        // Authenticate with Firebase
         final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
-          password: _passwordController.text,
+          password: _passwordController.text.trim(),
         );
-
-        // Save credentials if remember me is checked
-        await _saveUserCredentials();
-
-        // Check if email is verified and handle successful login
+        
         if (userCredential.user != null) {
-          // Process successful login
-          await _handleSuccessfulLogin(userCredential.user!);
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Login successful!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+            
+            // Navigate to camera screen after successful authentication
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CameraHomePage(
+                  camera: widget.initialCamera,
+                  cameras: widget.cameras,
+                ),
+              ),
+            );
+          }
         }
       } on FirebaseAuthException catch (e) {
         // Handle specific Firebase Auth errors
-        String errorMessage = 'Failed to sign in';
+        String errorMessage = 'Authentication failed';
         
         if (e.code == 'user-not-found') {
           errorMessage = 'No user found with this email';
         } else if (e.code == 'wrong-password') {
-          errorMessage = 'Incorrect password';
-        } else if (e.code == 'invalid-credential') {
-          errorMessage = 'Invalid email or password';
+          errorMessage = 'Wrong password';
+        } else if (e.code == 'invalid-email') {
+          errorMessage = 'Invalid email format';
         } else if (e.code == 'user-disabled') {
           errorMessage = 'This account has been disabled';
+        } else if (e.code == 'too-many-requests') {
+          errorMessage = 'Too many attempts. Please try again later';
         }
         
         if (mounted) {
@@ -184,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
           );
         }
       } catch (e) {
-        // Handle general errors
+        // Handle generic errors
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -199,42 +105,6 @@ class _LoginPageState extends State<LoginPage> {
             _isLoading = false;
           });
         }
-      }
-    }
-  }
-
-  // Handle forgot password
-  Future<void> _forgotPassword() async {
-    final email = _emailController.text.trim();
-    
-    if (email.isEmpty || !RegExp(r'\S+@\S+\.\S+').hasMatch(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid email address first'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-    
-    try {
-      await _auth.sendPasswordResetEmail(email: email);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password reset email sent. Please check your inbox.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
     }
   }
@@ -341,7 +211,9 @@ class _LoginPageState extends State<LoginPage> {
                               ],
                             ),
                             TextButton(
-                              onPressed: _forgotPassword,
+                              onPressed: () {
+                                _showForgotPasswordDialog();
+                              },
                               child: const Text('Forgot Password?'),
                             ),
                           ],
@@ -351,12 +223,11 @@ class _LoginPageState extends State<LoginPage> {
                           width: double.infinity,
                           height: 50,
                           child: ElevatedButton(
-                            onPressed: _isLoading ? null : _login,
+                            onPressed: _isLoading ? null : _signIn,
                             style: ElevatedButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              disabledBackgroundColor: Colors.grey.shade300,
                             ),
                             child: _isLoading
                                 ? const CircularProgressIndicator(color: Colors.white)
@@ -376,13 +247,8 @@ class _LoginPageState extends State<LoginPage> {
                             const Text("Don't have an account?"),
                             TextButton(
                               onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => SignUpPage(
-                                    initialCamera: widget.initialCamera,
-                                    cameras: widget.cameras,
-                                  )),
-                                );
+                                // Navigate to Sign Up page
+                                Navigator.pushNamed(context, '/signup');
                               },
                               child: const Text(
                                 'Sign Up',
@@ -400,6 +266,76 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
+    );
+  }
+
+  // Method to show forgot password dialog
+  void _showForgotPasswordDialog() {
+    final TextEditingController resetEmailController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Reset Password'),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: resetEmailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                hintText: 'Enter your email address',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your email';
+                }
+                if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
+                  return 'Please enter a valid email';
+                }
+                return null;
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('CANCEL'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  try {
+                    await _auth.sendPasswordResetEmail(
+                      email: resetEmailController.text.trim(),
+                    );
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Password reset email sent'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } catch (e) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text('RESET'),
+            ),
+          ],
+        );
+      },
     );
   }
 

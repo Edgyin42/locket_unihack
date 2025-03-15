@@ -50,18 +50,26 @@ class _CameraHomePageState extends State<CameraHomePage> {
   }
 
   Future<void> _initializeCamera(CameraDescription camera) async {
-    _controller = CameraController(
-      camera,
-      ResolutionPreset.high,
-      enableAudio: false,
-    );
+    try {
+      _controller = CameraController(
+        camera,
+        ResolutionPreset.high,
+        enableAudio: false,
+      );
 
-    _initializeControllerFuture = _controller.initialize();
-
-    if (mounted) {
-      setState(() {});
-    }
+      _initializeControllerFuture = _controller.initialize();
+      await _initializeControllerFuture; // Wait for initialization to complete
+      
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      print('Error initializing camera: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to initialize camera: ${e.toString()}')),
+      );
   }
+}
 
   @override
   void dispose() {
