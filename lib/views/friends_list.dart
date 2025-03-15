@@ -1,4 +1,5 @@
 import 'package:demo/views/search_friends.dart';
+import 'package:demo/views/viewfriendprofile.dart';
 import 'package:flutter/material.dart';
 import 'package:demo/services/connection_service.dart';
 
@@ -26,10 +27,13 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
   void _loadFriends() async {
     List<Map<String, dynamic>> friends = await _connectionService
         .getFriendDetails(widget.friendIds);
+
     setState(() {
       _friends = friends;
       _isLoading = false;
     });
+
+    print("Loaded friends: $_friends"); // Debugging output
   }
 
   @override
@@ -43,6 +47,7 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
                 itemCount: _friends.length,
                 itemBuilder: (context, index) {
                   var friend = _friends[index];
+
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundImage:
@@ -54,8 +59,24 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
                               ? Icon(Icons.person)
                               : null,
                     ),
-                    title: Text(friend["name"]),
-                    subtitle: Text(friend["email"]),
+                    title: Text(friend["name"] ?? "No Name"),
+                    subtitle: Text(friend["email"] ?? "No Email"),
+                    onTap: () {
+                      print('Tapped on: ${friend["id"]}'); // Debugging print
+
+                      if (friend["id"] != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    FriendProfileScreen(userId: friend["id"]),
+                          ),
+                        );
+                      } else {
+                        print("Error: Friend ID is null");
+                      }
+                    },
                   );
                 },
               ),
