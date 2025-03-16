@@ -57,15 +57,17 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
       final studentProfile = await _studentService.getStudentProfileByEmail();
       if (studentProfile != null) {
         _currentUserId = studentProfile.id;
-        
+
         // Fetch all available classes
         final allClasses = await _classService.getAllClasses();
-        
+
         // If student ID exists, fetch enrolled classes
         if (_currentUserId != null && _currentUserId!.isNotEmpty) {
-          final enrolledClasses = await _classStudentService.getClassesByStudent(_currentUserId!);
-          final enrolledClassIds = enrolledClasses.map((cs) => cs.classId).toList();
-          
+          final enrolledClasses = await _classStudentService
+              .getClassesByStudent(_currentUserId!);
+          final enrolledClassIds =
+              enrolledClasses.map((cs) => cs.classId).toList();
+
           setState(() {
             _availableClasses = allClasses;
           });
@@ -77,9 +79,9 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching classes: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error fetching classes: $e')));
     }
   }
 
@@ -126,19 +128,19 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
     try {
       // Configure Cloudinary
       final cloudinary = CloudinaryPublic('ddpo3n8j3', 'michaelwave');
-      
+
       // Upload image to Cloudinary
       final response = await cloudinary.uploadFile(
         CloudinaryFile.fromFile(widget.imagePath, folder: 'status_images'),
       );
-      
+
       // Get the secure URL of the uploaded image
       final imageUrl = response.secureUrl;
-      
+
       // Get current user
       final studentProfile = await _studentService.getStudentProfileByEmail();
       final userId = studentProfile?.id ?? 'unknown-user';
-      
+
       // Save post data to Firebase
       await FirebaseFirestore.instance.collection('posts').add({
         'imageUrl': imageUrl,
@@ -158,9 +160,9 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
       }
     } catch (e) {
       // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to upload: $e')));
     } finally {
       if (mounted) {
         setState(() {
@@ -181,17 +183,24 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
         actions: [
           TextButton(
             onPressed: _isUploading ? null : _uploadImage,
-            child: _isUploading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(color: Colors.amber, strokeWidth: 2),
-                  )
-                : const Text(
-                    'Post',
-                    style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
-                  ),
-          )
+            child:
+                _isUploading
+                    ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFFF0099),
+                        strokeWidth: 2,
+                      ),
+                    )
+                    : const Text(
+                      'Post',
+                      style: TextStyle(
+                        color: Color(0xFFFF0099),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -205,10 +214,7 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
                 borderRadius: BorderRadius.circular(16),
                 child: AspectRatio(
                   aspectRatio: 4 / 3,
-                  child: Image.file(
-                    File(widget.imagePath),
-                    fit: BoxFit.cover,
-                  ),
+                  child: Image.file(File(widget.imagePath), fit: BoxFit.cover),
                 ),
               ),
               const SizedBox(height: 20),
@@ -238,7 +244,10 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
                       child: Text(
                         '$_currentWordCount/$_maxWords words',
                         style: TextStyle(
-                          color: _currentWordCount > _maxWords ? Colors.red : Colors.grey,
+                          color:
+                              _currentWordCount > _maxWords
+                                  ? Colors.red
+                                  : Colors.grey,
                           fontSize: 12,
                         ),
                       ),
@@ -261,24 +270,32 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
               _availableClasses.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _availableClasses.map((classData) {
-                        final isSelected = _selectedClasses.contains(classData.classId);
-                        return GestureDetector(
-                          onTap: () => _toggleClassSelection(classData.classId),
-                          child: Chip(
-                            backgroundColor: isSelected ? Colors.amber : Colors.grey[800],
-                            label: Text(
-                              classData.className,
-                              style: TextStyle(
-                                color: isSelected ? Colors.black : Colors.white,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children:
+                        _availableClasses.map((classData) {
+                          final isSelected = _selectedClasses.contains(
+                            classData.classId,
+                          );
+                          return GestureDetector(
+                            onTap:
+                                () => _toggleClassSelection(classData.classId),
+                            child: Chip(
+                              backgroundColor:
+                                  isSelected
+                                      ? Color(0xFFFF0099)
+                                      : Colors.grey[800],
+                              label: Text(
+                                classData.className,
+                                style: TextStyle(
+                                  color:
+                                      isSelected ? Colors.black : Colors.white,
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                          );
+                        }).toList(),
+                  ),
               const SizedBox(height: 20),
 
               // Hashtags section
@@ -314,7 +331,7 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
                   const SizedBox(width: 8),
                   IconButton(
                     onPressed: _addHashtag,
-                    icon: Icon(Icons.add_circle, color: Colors.amber),
+                    icon: Icon(Icons.add_circle, color: Color(0xFFFF0099)),
                   ),
                 ],
               ),
@@ -325,7 +342,7 @@ class _PostStatusScreenState extends State<PostStatusScreen> {
                 children: List.generate(
                   _hashtags.length,
                   (index) => Chip(
-                    backgroundColor: Colors.amber.withOpacity(0.8),
+                    backgroundColor: Color(0xFFFF0099).withOpacity(0.8),
                     label: Text(
                       _hashtags[index],
                       style: const TextStyle(color: Colors.black),

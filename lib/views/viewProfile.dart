@@ -646,12 +646,12 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       body:
           _isLoading
               ? const Center(
-                child: CircularProgressIndicator(color: Colors.amber),
+                child: CircularProgressIndicator(color: Color(0xFFFF0099)),
               )
               : SafeArea(
                 child: RefreshIndicator(
                   onRefresh: _loadUserData,
-                  color: Colors.amber,
+                  color: Color(0xFFFF0099),
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: Column(
@@ -797,7 +797,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                                   child: Padding(
                                     padding: EdgeInsets.all(20.0),
                                     child: CircularProgressIndicator(
-                                      color: Colors.amber,
+                                      color: Color(0xFFFF0099),
                                     ),
                                   ),
                                 );
