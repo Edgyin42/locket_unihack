@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:demo/services/student_service.dart';
+import 'package:demo/views/postbyhashtag.dart';
 import 'package:demo/views/viewfriendprofile.dart';
 import 'package:flutter/material.dart';
 
@@ -204,16 +205,41 @@ class _SinglePostViewScreenState extends State<SinglePostViewScreen> {
               const SizedBox(height: 8),
 
               // Hashtags
+              // Wrap(
+              //   spacing: 8,
+              //   children:
+              //       hashtags.map((hashtag) {
+              //         return Chip(
+              //           label: Text(
+              //             "$hashtag",
+              //             style: const TextStyle(color: Colors.white),
+              //           ),
+              //           backgroundColor: Colors.pinkAccent,
+              //         );
+              //       }).toList(),
+              // ),
               Wrap(
                 spacing: 8,
                 children:
                     hashtags.map((hashtag) {
-                      return Chip(
-                        label: Text(
-                          "#$hashtag",
-                          style: const TextStyle(color: Colors.white),
+                      return GestureDetector(
+                        onTap: () {
+                          // Navigate to another page when hashtag is tapped
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => HashtagPage(hashtag: hashtag),
+                            ),
+                          );
+                        },
+                        child: Chip(
+                          label: Text(
+                            "$hashtag",
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.pinkAccent,
                         ),
-                        backgroundColor: Colors.pinkAccent,
                       );
                     }).toList(),
               ),
