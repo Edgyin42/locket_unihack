@@ -512,9 +512,8 @@ class _CameraHomePageState extends State<CameraHomePage> {
                 ),
               ),
 
-              // Post History Section
               Container(
-                height: MediaQuery.of(context).size.height, // Make it tall enough to scroll
+                height: MediaQuery.of(context).size.height , // Full screen height
                 child: FutureBuilder<List<Post>>(
                   future: _postsFuture,
                   builder: (context, snapshot) {
@@ -542,8 +541,9 @@ class _CameraHomePageState extends State<CameraHomePage> {
                       );
                     }
 
-                    // Display posts in a PageView for swiping through posts
+                    // Use ListView.builder for post-by-post scrolling
                     return ListView.builder(
+                      physics: const PageScrollPhysics(), // Snap-like scrolling
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
                         final post = snapshot.data![index];
@@ -570,111 +570,117 @@ class _CameraHomePageState extends State<CameraHomePage> {
                             String email = userSnapshot.data?['email'] ?? "";
                             String profilePhoto = userSnapshot.data?['profilePhoto'] ?? "";
 
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-                              color: Colors.grey[900],
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // User Profile Row (Profile Picture + Name)
-                                    Row(
-                                      children: [
-                                        // Profile Picture
-                                        GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    FriendProfileScreen(email: email),
-                                              ),
-                                            );
-                                          },
-                                          child: CircleAvatar(
-                                            radius: 20,
-                                            backgroundImage: profilePhoto.isNotEmpty
-                                                ? NetworkImage(profilePhoto)
-                                                : const AssetImage('assets/default_profile.png')
-                                            as ImageProvider,
-                                            backgroundColor: Colors.grey[800],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        // User Name
-                                        GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    FriendProfileScreen(email: email),
-                                              ),
-                                            );
-                                          },
-                                          child: Text(
-                                            fullName,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
+                            // Each post takes up the full screen height
+                            return SizedBox(
+                              height: MediaQuery.of(context).size.height,
+                              child: Card(
+                                margin: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                                color: Colors.grey[900],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // User Profile Row (Profile Picture + Name)
+                                      Row(
+                                        children: [
+                                          // Profile Picture
+                                          GestureDetector(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      FriendProfileScreen(email: email),
+                                                ),
+                                              );
+                                            },
+                                            child: CircleAvatar(
+                                              radius: 20,
+                                              backgroundImage: profilePhoto.isNotEmpty
+                                                  ? NetworkImage(profilePhoto)
+                                                  : const AssetImage('assets/default_profile.png')
+                                              as ImageProvider,
+                                              backgroundColor: Colors.grey[800],
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      _formatDate(post.createdAt),
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-
-                                    // Post Image
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: AspectRatio(
-                                        aspectRatio: 1.0,
-                                        child: Image.network(
-                                          post.imageUrl,
-                                          fit: BoxFit.cover,
-                                          width: double.infinity,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-
-                                    // Post Description
-                                    Text(
-                                      post.description,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-
-                                    // Hashtags
-                                    Wrap(
-                                      spacing: 8,
-                                      children: post.hashtags.map((hashtag) {
-                                        return Chip(
-                                          label: Text(
-                                            "#$hashtag",
-                                            style: const TextStyle(color: Colors.white),
+                                          const SizedBox(width: 10),
+                                          // User Name
+                                          GestureDetector(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      FriendProfileScreen(email: email),
+                                                ),
+                                              );
+                                            },
+                                            child: Text(
+                                              fullName,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                           ),
-                                          backgroundColor: Colors.pinkAccent,
-                                        );
-                                      }).toList(),
-                                    ),
-                                  ],
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _formatDate(post.createdAt),
+                                        style: const TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      SizedBox(
+                                        height: MediaQuery.of(context).size.height * 0.1, // Adjust this value to control the delay
+                                      ),
+
+                                      // Post Image
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: AspectRatio(
+                                          aspectRatio: 1.0,
+                                          child: Image.network(
+                                            post.imageUrl,
+                                            fit: BoxFit.cover,
+                                            width: double.infinity,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      // Post Description
+                                      Text(
+                                        post.description,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+
+                                      // Hashtags
+                                      Wrap(
+                                        spacing: 8,
+                                        children: post.hashtags.map((hashtag) {
+                                          return Chip(
+                                            label: Text(
+                                              "#$hashtag",
+                                              style: const TextStyle(color: Colors.white),
+                                            ),
+                                            backgroundColor: Colors.pinkAccent,
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             );
@@ -692,3 +698,4 @@ class _CameraHomePageState extends State<CameraHomePage> {
     );
   }
 }
+
