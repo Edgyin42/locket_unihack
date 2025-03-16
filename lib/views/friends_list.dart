@@ -32,39 +32,56 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
       _friends = friends;
       _isLoading = false;
     });
-
-    print("Loaded friends: $_friends"); // Debugging output
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Friends List")),
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: Text("Friends List", style: TextStyle(color: Colors.white)),
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
       body:
           _isLoading
-              ? Center(child: CircularProgressIndicator())
+              ? Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF0099)),
+                ),
+              )
               : ListView.builder(
                 itemCount: _friends.length,
                 itemBuilder: (context, index) {
                   var friend = _friends[index];
 
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage:
-                          friend["photoUrl"] != null
-                              ? NetworkImage(friend["photoUrl"])
-                              : null,
-                      child:
-                          friend["photoUrl"] == null
-                              ? Icon(Icons.person)
-                              : null,
+                  return Container(
+                    margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF1E1E1E),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    title: Text(friend["name"] ?? ""),
-                    subtitle: Text(friend["email"] ?? ""),
-                    onTap: () {
-                      print('Tapped on: ${friend["id"]}'); // Debugging print
-
-                      if (friend["id"] != null) {
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.grey[800],
+                        backgroundImage:
+                            friend["profilePhoto"] != null
+                                ? NetworkImage(friend["profilePhoto"])
+                                : null,
+                        child:
+                            friend["profilePhoto"] == null
+                                ? Icon(Icons.person, color: Colors.white70)
+                                : null,
+                      ),
+                      title: Text(
+                        friend["fullName"] ?? "",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      subtitle: Text(
+                        friend["email"] ?? "",
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                      onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -73,15 +90,11 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
                                     FriendProfileScreen(email: friend["email"]),
                           ),
                         );
-                      } else {
-                        print("Error: Friend ID is null");
-                      }
-                    },
+                      },
+                    ),
                   );
                 },
               ),
-
-      // Floating Action Button to add friends
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -89,7 +102,7 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
             MaterialPageRoute(builder: (context) => SearchScreen()),
           );
         },
-        backgroundColor: Colors.blue,
+        backgroundColor: Color(0xFFFF0099),
         child: Icon(Icons.person_add, color: Colors.white),
       ),
     );
