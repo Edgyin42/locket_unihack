@@ -1,8 +1,12 @@
+import 'package:demo/services/connection_service.dart';
+import 'package:demo/views/friends_list.dart';
 import 'package:flutter/material.dart';
 import 'package:demo/views/edit_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/src/material/page.dart';
+// Import the new SinglePostViewScreen
+import 'package:demo/views/post_details.dart'; // You'll need to create this file
 
 class ViewProfileScreen extends StatefulWidget {
   const ViewProfileScreen({Key? key}) : super(key: key);
@@ -14,6 +18,7 @@ class ViewProfileScreen extends StatefulWidget {
 class _ViewProfileScreenState extends State<ViewProfileScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final ConnectionService _connectionService = ConnectionService();
 
   // User data variables
   String _username = "";
@@ -23,6 +28,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
   List<String> _interests = [];
   bool _isLoading = true;
   String? _profileImageUrl;
+  List<String> _friendIds = [];
 
   @override
   void initState() {
@@ -71,7 +77,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
             }
 
             // Load counts with additional queries if needed
-            _loadFriendsCount(currentUser.uid);
+            _loadFriends(FirebaseAuth.instance.currentUser?.uid ?? "");
             _loadPostsCount(currentUser.uid);
           });
         }
@@ -91,21 +97,28 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
   }
 
   // Load friends count
-  Future<void> _loadFriendsCount(String userId) async {
-    try {
-      // This is a placeholder - implement according to your database structure
-      final QuerySnapshot friendsSnapshot =
-          await _firestore
-              .collection('connections')
-              .where('userId', isEqualTo: userId)
-              .get();
+  // Future<void> _loadFriendsCount(String userId) async {
+  //   try {
+  //     // This is a placeholder - implement according to your database structure
+  //     final QuerySnapshot friendsSnapshot =
+  //         await _firestore
+  //             .collection('connections')
+  //             .where('userId', isEqualTo: userId)
+  //             .get();
 
-      setState(() {
-        _friendsCount = friendsSnapshot.docs.length;
-      });
-    } catch (e) {
-      // Handle error silently - friends count will remain at default
-    }
+  //     setState(() {
+  //       _friendsCount = friendsSnapshot.docs.length;
+  //     });
+  //   } catch (e) {
+  //     // Handle error silently - friends count will remain at default
+  //   }
+  // }
+  Future<void> _loadFriends(String userId) async {
+    List<String> friends = await _connectionService.getUserFriends(userId);
+    setState(() {
+      _friendIds = friends;
+      _friendsCount = friends.length;
+    });
   }
 
   // Load posts count
@@ -188,26 +201,6 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                                         )
                                         : null,
                               ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.amber,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.black,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.camera_alt,
-                                    color: Colors.black,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                         ),
@@ -242,10 +235,38 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                         const SizedBox(height: 25),
 
                         // Stats row
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.center,
+                        //   children: [
+                        //     _buildStat('Friends', _friendsCount),
+                        //     Container(
+                        //       height: 40,
+                        //       width: 1,
+                        //       color: Colors.grey[800],
+                        //       margin: const EdgeInsets.symmetric(
+                        //         horizontal: 20,
+                        //       ),
+                        //     ),
+                        //     _buildStat('Posts', _postsCount),
+                        //   ],
+                        // ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _buildStat('Friends', _friendsCount),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => FriendsListScreen(
+                                          friendIds: _friendIds,
+                                        ),
+                                  ),
+                                );
+                              },
+                              child: _buildStat('Friends', _friendsCount),
+                            ),
                             Container(
                               height: 40,
                               width: 1,
@@ -257,7 +278,6 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                             _buildStat('Posts', _postsCount),
                           ],
                         ),
-
                         const SizedBox(height: 25),
 
                         // Interests section
@@ -293,7 +313,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
 
                         const SizedBox(height: 25),
 
-                        // Recent photos grid - to be implemented with Firestore data
+                        // Recent photos grid - Modified to navigate to SinglePostViewScreen
                         FutureBuilder<QuerySnapshot>(
                           future:
                               _firestore
@@ -328,36 +348,56 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                                         doc.data() as Map<String, dynamic>;
                                     final imageUrl =
                                         data['imageUrl'] as String?;
+                                    final String postId = doc.id;
 
-                                    return Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[800],
-                                        borderRadius: BorderRadius.circular(8),
-                                        image:
-                                            imageUrl != null &&
-                                                    imageUrl.isNotEmpty
-                                                ? DecorationImage(
-                                                  image: NetworkImage(imageUrl),
-                                                  fit: BoxFit.cover,
-                                                  onError: (
-                                                    exception,
-                                                    stackTrace,
-                                                  ) {
-                                                    print(
-                                                      'Failed to load image: $imageUrl',
-                                                    );
-                                                  },
+                                    return GestureDetector(
+                                      onTap: () {
+                                        // Navigate to the single post view when tapped
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) =>
+                                                    SinglePostViewScreen(
+                                                      postId: postId,
+                                                    ),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[800],
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          image:
+                                              imageUrl != null &&
+                                                      imageUrl.isNotEmpty
+                                                  ? DecorationImage(
+                                                    image: NetworkImage(
+                                                      imageUrl,
+                                                    ),
+                                                    fit: BoxFit.cover,
+                                                    onError: (
+                                                      exception,
+                                                      stackTrace,
+                                                    ) {
+                                                      print(
+                                                        'Failed to load image: $imageUrl',
+                                                      );
+                                                    },
+                                                  )
+                                                  : null,
+                                        ),
+                                        child:
+                                            imageUrl == null || imageUrl.isEmpty
+                                                ? Icon(
+                                                  Icons.image,
+                                                  color: Colors.grey[400],
+                                                  size: 30,
                                                 )
                                                 : null,
                                       ),
-                                      child:
-                                          imageUrl == null || imageUrl.isEmpty
-                                              ? Icon(
-                                                Icons.image,
-                                                color: Colors.grey[400],
-                                                size: 30,
-                                              )
-                                              : null,
                                     );
                                   }).toList();
                             } else {
