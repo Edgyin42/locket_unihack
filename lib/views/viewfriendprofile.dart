@@ -76,13 +76,9 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
   }
 
   Future<void> _loadFriendsCount(String userId) async {
-    final connections =
-        await _firestore
-            .collection('connections')
-            .where('student1_id', isEqualTo: userId)
-            .get();
+    final connections_ = await _connectionService.getUserFriends(userId);
     setState(() {
-      _friendsCount = connections.docs.length;
+      _friendsCount = connections_.length;
     });
   }
 
