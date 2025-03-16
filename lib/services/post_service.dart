@@ -47,6 +47,27 @@ class PostService {
       print("Error adding post: $e");
     }
   }
+  // Add this method to your PostService class
+
+  // Fetch posts by hashtag
+  Future<List<Post>> getPostsByHashtag(String hashtag) async {
+    try {
+      // Make sure hashtag includes the # symbol if needed
+      String searchTag = hashtag.startsWith('#') ? hashtag : '#$hashtag';
+
+      QuerySnapshot querySnapshot =
+          await _firestore
+              .collection('posts')
+              .where('hashtags', arrayContains: searchTag)
+              .orderBy('createdAt', descending: true)
+              .get();
+
+      return querySnapshot.docs.map((doc) => Post.fromDocument(doc)).toList();
+    } catch (e) {
+      print("Error fetching posts by hashtag: $e");
+      return [];
+    }
+  }
 
   // Fetch relevant posts for the current user
   Future<List<Post>> getRelevantPosts() async {
